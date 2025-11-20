@@ -69,109 +69,102 @@ def parse_html_to_dataframe(html_content):
     df = df.dropna(subset=['Close Date', 'Profit/Loss Amount']) # Drop rows where essential data is missing
     return df
 
-# --- UI AND DASHBOARD LOGIC ---
+def show_dashboard():
+    # --- Data Input Sidebar ---
+    st.sidebar.header("Data Input")
+    html_input = st.sidebar.text_area("Paste HTML content here", height=250)
 
-# --- Dashboard Title ---
-st.title("📊 Trading Dashboard")
+    if st.sidebar.button("Process HTML"):
+        if html_input:
+            with st.spinner("Processing data..."):
+                df = parse_html_to_dataframe(html_input)
+                if not df.empty:
+                    st.session_state['df'] = df # Store the dataframe in session state
+                    st.sidebar.success(f"Successfully parsed {len(df)} trades!")
+                else:
+                    st.sidebar.error("Could not find any valid trade data in the HTML.")
+        else:
+            st.sidebar.warning("Please paste HTML content before processing.")
 
-# --- Data Input Sidebar ---
-st.sidebar.header("Data Input")
-html_input = st.sidebar.text_area("Paste HTML content here", height=250)
+    # Only show the dashboard if data has been processed and stored
+    if 'df' not in st.session_state:
+        st.info("Please paste your trading data HTML into the sidebar and click 'Process HTML' to view the dashboard.")
+        st.stop()
 
-if st.sidebar.button("Process HTML"):
-    if html_input:
-        with st.spinner("Processing data..."):
-            df = parse_html_to_dataframe(html_input)
-            if not df.empty:
-                st.session_state['df'] = df # Store the dataframe in session state
-                st.sidebar.success(f"Successfully parsed {len(df)} trades!")
-            else:
-                st.sidebar.error("Could not find any valid trade data in the HTML.")
-    else:
-        st.sidebar.warning("Please paste HTML content before processing.")
+    df = st.session_state['df']
 
-# Only show the dashboard if data has been processed and stored
-if 'df' not in st.session_state:
-    st.info("Please paste your trading data HTML into the sidebar and click 'Process HTML' to view the dashboard.")
-    st.stop()
-
-df = st.session_state['df']
-
-# --- Sidebar Filters ---
-st.sidebar.header("Filters")
-asset_class = st.sidebar.multiselect(
-    "Select Asset Class:",
-    options=df["Asset Class"].unique(),
-    default=df["Asset Class"].unique()
-)
-
-df_selection = df.query(
-    "`Asset Class` == @asset_class"
-)
-
-# Check if the dataframe is empty
-if df_selection.empty:
-    st.warning("No data available for the selected filters. Please select at least one asset class.")
-    st.stop() # This will halt the app from running further
-
-try:
-    # --- Summary Metrics ---
-    total_profit = df_selection["Profit/Loss Amount"].sum()
-    avg_return = df_selection["Percent"].mean()
-    num_trades = len(df_selection)
-    oldest_date = df_selection["Close Date"].min().strftime("%Y-%m-%d")
-    newest_date = df_selection["Close Date"].max().strftime("%Y-%m-%d")
-
-    # Display metrics
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total Profit/Loss", f"${total_profit:,.2f}")
-    col2.metric("Average Return", f"{avg_return:.2f}%")
-    col3.metric("Number of Trades", num_trades)
-    st.metric("Date range", f"{oldest_date} to {newest_date}")
-
-    # --- Profit Trend Over Time ---
-    # Prepare data for combo chart
-    daily_profit = df_selection.groupby(df_selection["Close Date"].dt.date)["Profit/Loss Amount"].sum()
-    cumulative_profit = daily_profit.cumsum()
-
-    # Create a figure with graph_objects
-    fig = go.Figure()
-
-    # Add the daily profit as a bar chart
-    fig.add_trace(go.Bar(
-        x=daily_profit.index,
-        y=daily_profit.values,
-        name='Daily Profit/Loss',
-        yaxis='y2',  # Assign this trace to the secondary y-axis
-        marker_color=['green' if p >= 0 else 'red' for p in daily_profit.values] # Color bars based on profit/loss
-    ))
-
-    # Add the cumulative profit as a line chart
-    fig.add_trace(go.Scatter(x=cumulative_profit.index, y=cumulative_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
-
-    # Update layout to include a secondary y-axis
-    fig.update_layout(
-        title_text="Cumulative & Daily Profit Trend",
-        xaxis_title="Date",
-        yaxis=dict(title="Cumulative Profit ($)", color="blue"),
-        yaxis2=dict(
-            title="Daily Profit/Loss ($)",
-            overlaying="y",
-            side="right"
-        ),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    # --- Sidebar Filters ---
+    st.sidebar.header("Filters")
+    asset_class = st.sidebar.multiselect(
+        "Select Asset Class:",
+        options=df["Asset Class"].unique(),
+        default=df["Asset Class"].unique()
     )
-    st.plotly_chart(fig)
 
-    # --- Asset Class Breakdown ---
-    asset_breakdown = df_selection.groupby("Asset Class")["Profit/Loss Amount"].sum().reset_index()
-    fig2 = px.pie(asset_breakdown, names="Asset Class", values="Profit/Loss Amount", title="Profit by Asset Class")
-    st.plotly_chart(fig2)
+    df_selection = df.query(
+        "`Asset Class` == @asset_class"
+    )
 
-    # --- Top Trades ---
-    top_trades = df_selection.sort_values("Profit/Loss Amount", ascending=False).head(10)
-    st.subheader("🔥 Top 10 Trades")
-    st.dataframe(top_trades[["Asset Name", "Asset Ticker", "Profit/Loss Amount", "Close Date", "Asset Class"]])
+    # Check if the dataframe is empty
+    if df_selection.empty:
+        st.warning("No data available for the selected filters. Please select at least one asset class.")
+        st.stop() # This will halt the app from running further
 
-except KeyError as e:
-    st.error(f"An error occurred: The column {e} was not found in your Excel file. Please check the column names printed above and update your script accordingly.")
+    try:
+        # --- Summary Metrics ---
+        total_profit = df_selection["Profit/Loss Amount"].sum()
+        avg_return = df_selection["Percent"].mean()
+        num_trades = len(df_selection)
+        oldest_date = df_selection["Close Date"].min().strftime("%Y-%m-%d")
+        newest_date = df_selection["Close Date"].max().strftime("%Y-%m-%d")
+
+        # Display metrics
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Profit/Loss", f"${total_profit:,.2f}")
+        col2.metric("Average Return", f"{avg_return:.2f}%")
+        col3.metric("Number of Trades", num_trades)
+        st.metric("Date range", f"{oldest_date} to {newest_date}")
+
+        # --- Profit Trend Over Time ---
+        daily_profit = df_selection.groupby(df_selection["Close Date"].dt.date)["Profit/Loss Amount"].sum()
+        cumulative_profit = daily_profit.cumsum()
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=daily_profit.index, y=daily_profit.values, name='Daily Profit/Loss',
+            yaxis='y2', marker_color=['green' if p >= 0 else 'red' for p in daily_profit.values]
+        ))
+        fig.add_trace(go.Scatter(x=cumulative_profit.index, y=cumulative_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
+        fig.update_layout(
+            title_text="Cumulative & Daily Profit Trend", xaxis_title="Date",
+            yaxis=dict(title="Cumulative Profit ($)", color="blue"),
+            yaxis2=dict(title="Daily Profit/Loss ($)", overlaying="y", side="right"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        st.plotly_chart(fig)
+
+        # --- Asset Class Breakdown ---
+        asset_breakdown = df_selection.groupby("Asset Class")["Profit/Loss Amount"].sum().reset_index()
+        fig2 = px.pie(asset_breakdown, names="Asset Class", values="Profit/Loss Amount", title="Profit by Asset Class")
+        st.plotly_chart(fig2)
+
+        # --- Top Trades ---
+        top_trades = df_selection.sort_values("Profit/Loss Amount", ascending=False).head(10)
+        st.subheader("🔥 Top 10 Trades")
+        st.dataframe(top_trades[["Asset Name", "Asset Ticker", "Profit/Loss Amount", "Close Date", "Asset Class"]])
+
+    except KeyError as e:
+        st.error(f"An error occurred: The column {e} was not found. Please check the HTML source or the parsing logic.")
+
+# --- Password Protection ---
+def check_password():
+    st.title("📊 Trading Dashboard")
+    password = st.text_input("Enter Password", type="password")
+    if password == st.secrets["PASSWORD"]:
+        return True
+    elif password: # If a password was entered but it's wrong
+        st.error("Incorrect password")
+    return False
+
+if check_password():
+    show_dashboard()

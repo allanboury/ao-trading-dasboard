@@ -1,0 +1,20 @@
+# Python virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Streamlit credentials and config
+# This is important to keep your secrets.toml file from being uploaded
+.streamlit/
+
+# IDE and editor folders
+.vscode/
+.idea/
+
+# Any local data files that might be generated
+*.xlsx
