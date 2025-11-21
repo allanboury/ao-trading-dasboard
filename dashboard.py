@@ -153,6 +153,11 @@ def show_dashboard():
         st.subheader("🔥 Top 10 Trades")
         st.dataframe(top_trades[["Asset Name", "Asset Ticker", "Profit/Loss Amount", "Close Date", "Asset Class"]])
 
+        # --- Display Original Data Table ---
+        st.subheader("Raw Data Table")
+        with st.expander("Click to view the full extracted data table"):
+            st.dataframe(df) # Display the full, unfiltered DataFrame
+
     except KeyError as e:
         st.error(f"An error occurred: The column {e} was not found. Please check the HTML source or the parsing logic.")
 
