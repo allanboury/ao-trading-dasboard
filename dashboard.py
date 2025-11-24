@@ -101,22 +101,22 @@ def show_dashboard():
         default=df["Asset Class"].unique()
     )
 
-start_date, end_date = st.sidebar.date_input(
-    "Select Date Range:",
-    value=(df["Close Date"].min(), df["Close Date"].max()),
-    min_value=df["Close Date"].min(),
-    max_value=df["Close Date"].max(),
-)
-
+    start_date, end_date = st.sidebar.date_input(
+        "Select Date Range:",
+        value=(df["Close Date"].min(), df["Close Date"].max()),
+        min_value=df["Close Date"].min(),
+        max_value=df["Close Date"].max(),
+    )
+    
     df_selection = df.query(
-    "`Asset Class` == @asset_class & `Close Date` >= @start_date & `Close Date` <= @end_date"
+        "`Asset Class` == @asset_class & `Close Date` >= @start_date & `Close Date` <= @end_date"
     )
 
     # Check if the dataframe is empty
     if df_selection.empty:
-    st.warning("No data available for the selected filters. Please adjust your selection.")
+        st.warning("No data available for the selected filters. Please adjust your selection.")
         st.stop() # This will halt the app from running further
-
+    
     try:
         # --- Summary Metrics ---
         total_profit = df_selection["Profit/Loss Amount"].sum()
