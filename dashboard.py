@@ -79,6 +79,7 @@ def show_dashboard():
             with st.spinner("Processing data..."):
                 df = parse_html_to_dataframe(html_input)
                 if not df.empty:
+                    # When new data is processed, reset the session state for filters
                     st.session_state['df'] = df # Store the dataframe in session state
                     st.sidebar.success(f"Successfully parsed {len(df)} trades!")
                 else:
@@ -95,10 +96,22 @@ def show_dashboard():
 
     # --- Sidebar Filters ---
     st.sidebar.header("Filters")
+
+    # Reset button logic
+    if st.sidebar.button("Reset All Filters"):
+        # To reset, we can simply clear the specific filter keys from session_state
+        # and Streamlit will rerun, causing them to revert to their defaults.
+        if 'asset_class_filter' in st.session_state:
+            del st.session_state['asset_class_filter']
+        if 'date_range_filter' in st.session_state:
+            del st.session_state['date_range_filter']
+        st.rerun()
+
     asset_class = st.sidebar.multiselect(
         "Select Asset Class:",
         options=df["Asset Class"].unique(),
-        default=df["Asset Class"].unique()
+        default=df["Asset Class"].unique(),
+        key="asset_class_filter" # Add a key to manage state
     )
 
     start_date, end_date = st.sidebar.date_input(
@@ -106,6 +119,7 @@ def show_dashboard():
         value=(df["Close Date"].min(), df["Close Date"].max()),
         min_value=df["Close Date"].min(),
         max_value=df["Close Date"].max(),
+        key="date_range_filter" # Add a key to manage state
     )
     
     df_selection = df.query(
