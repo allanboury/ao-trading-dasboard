@@ -149,7 +149,7 @@ def show_dashboard():
         avg_loss_percent = losing_trades["Percent"].mean()
         gross_profit = winning_trades["Profit/Loss Amount"].sum()
         gross_loss = abs(losing_trades["Profit/Loss Amount"].sum())
-        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float('N.A.')
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float('inf')
 
         # Display metrics
         st.metric("Date range", f"{oldest_date} to {newest_date}")
