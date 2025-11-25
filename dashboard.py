@@ -81,7 +81,6 @@ def show_dashboard():
             with st.spinner("Processing data..."):
                 df = parse_html_to_dataframe(html_input)
                 if not df.empty:
-                    # When new data is processed, reset the session state for filters
                     st.session_state['df'] = df # Store the dataframe in session state
                     st.sidebar.success(f"Successfully parsed {len(df)} trades!")
                 else:
@@ -101,12 +100,13 @@ def show_dashboard():
 
     # Reset button logic
     if st.sidebar.button("Reset All Filters"):
-        # To reset, we can simply clear the specific filter keys from session_state
-        # and Streamlit will rerun, causing them to revert to their defaults.
-        if 'asset_class_filter' in st.session_state:
-            del st.session_state['asset_class_filter']
-        if 'date_range_filter' in st.session_state:
-            del st.session_state['date_range_filter']
+        # Clear all session state keys related to filters to reset them
+        for key in st.session_state.keys():
+            if key.endswith('_filter'):
+                del st.session_state[key]
+        # Also clear the main dataframe to force reprocessing if needed, or just rerun
+        if 'df' in st.session_state:
+            del st.session_state['df']
         st.rerun()
 
     asset_class = st.sidebar.multiselect(
@@ -135,20 +135,39 @@ def show_dashboard():
     
     try:
         # --- Summary Metrics ---
+        # Basic Metrics
         total_profit = df_selection["Profit/Loss Amount"].sum()
-        avg_return = df_selection["Percent"].mean()
         num_trades = len(df_selection)
         oldest_date = df_selection["Close Date"].min().strftime("%Y-%m-%d")
         newest_date = df_selection["Close Date"].max().strftime("%Y-%m-%d")
 
-        # Display metrics
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Profit/Loss", f"${total_profit:,.2f}")
-        col2.metric("Average Return", f"{avg_return:.2f}%")
-        col3.metric("Number of Trades", num_trades)
-        st.metric("Date range", f"{oldest_date} to {newest_date}")
+        # Advanced Metrics
+        winning_trades = df_selection[df_selection["Profit/Loss Amount"] > 0]
+        losing_trades = df_selection[df_selection["Profit/Loss Amount"] <= 0]
+        win_rate = (len(winning_trades) / num_trades) * 100 if num_trades > 0 else 0
+        avg_win_percent = winning_trades["Percent"].mean()
+        avg_loss_percent = losing_trades["Percent"].mean()
+        gross_profit = winning_trades["Profit/Loss Amount"].sum()
+        gross_loss = abs(losing_trades["Profit/Loss Amount"].sum())
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float('inf')
 
-        # --- Profit Trend Over Time ---
+        # Display metrics
+        st.metric("Date range", f"{oldest_date} to {newest_date}")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Total Profit/Loss", f"${total_profit:,.2f}")
+        col2.metric("Win Rate", f"{win_rate:.2f}%")
+        col3.metric("Profit Factor", f"{profit_factor:.2f}")
+        col4.metric("Total Trades", num_trades)
+
+        st.markdown("---")
+
+        # --- Organize content into tabs ---
+        tab1, tab2, tab3 = st.tabs(["📈 Performance Trend", "📊 Asset Breakdown", "🔍 Trade Details"])
+
+        with tab1:
+            st.subheader("Performance Over Time")
+            # --- Profit Trend Over Time ---
         daily_profit = df_selection.groupby(df_selection["Close Date"].dt.date)["Profit/Loss Amount"].sum()
         cumulative_profit = daily_profit.cumsum()
 
@@ -162,24 +181,45 @@ def show_dashboard():
             title_text="Cumulative & Daily Profit Trend", xaxis_title="Date",
             yaxis=dict(title="Cumulative Profit ($)", color="blue"),
             yaxis2=dict(title="Daily Profit/Loss ($)", overlaying="y", side="right"),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                legend=dict(title="Metric", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         st.plotly_chart(fig)
 
-        # --- Asset Class Breakdown ---
-        asset_breakdown = df_selection.groupby("Asset Class")["Profit/Loss Amount"].sum().reset_index()
-        fig2 = px.pie(asset_breakdown, names="Asset Class", values="Profit/Loss Amount", title="Profit by Asset Class")
-        st.plotly_chart(fig2)
+        with tab2:
+            st.subheader("Performance by Asset Class")
+            # --- Asset Class Breakdown ---
+            asset_breakdown = df_selection.groupby("Asset Class")["Profit/Loss Amount"].sum().sort_values(ascending=False)
+            fig2 = px.bar(
+                asset_breakdown,
+                x=asset_breakdown.values,
+                y=asset_breakdown.index,
+                orientation='h',
+                title="Total Profit by Asset Class",
+                labels={'x': 'Total Profit/Loss ($)', 'y': 'Asset Class'},
+                text=asset_breakdown.values,
+            )
+            fig2.update_traces(texttemplate='$%{text:,.2f}', textposition='outside')
+            st.plotly_chart(fig2)
 
-        # --- Top Trades ---
-        top_trades = df_selection.sort_values("Profit/Loss Amount", ascending=False).head(10)
-        st.subheader("🔥 Top 10 Trades")
-        st.dataframe(top_trades[["Asset Name", "Asset Ticker", "Profit/Loss Amount", "Close Date", "Asset Class"]])
+        with tab3:
+            st.subheader("Trade Inspection")
+            # --- Top/Bottom Trades ---
+            num_display_trades = st.slider("Number of trades to display:", 5, 50, 10)
+            st.write(f"**🔥 Top {num_display_trades} Trades**")
+            st.dataframe(df_selection.sort_values("Profit/Loss Amount", ascending=False).head(num_display_trades))
+            
+            st.write(f"**🧊 Bottom {num_display_trades} Trades**")
+            st.dataframe(df_selection.sort_values("Profit/Loss Amount", ascending=True).head(num_display_trades))
 
-        # --- Display Original Data Table ---
-        st.subheader("Raw Data Table")
-        with st.expander("Click to view the full extracted data table"):
-            st.dataframe(df) # Display the full, unfiltered DataFrame
+            # --- Display Original Data Table ---
+            with st.expander("View Full Parsed Data Table & Export"):
+                st.dataframe(df)
+                st.download_button(
+                    label="Download data as CSV",
+                    data=df.to_csv(index=False).encode('utf-8'),
+                    file_name='parsed_trades.csv',
+                    mime='text/csv',
+                )
 
     except KeyError as e:
         st.error(f"An error occurred: The column {e} was not found. Please check the HTML source or the parsing logic.")
