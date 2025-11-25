@@ -124,8 +124,8 @@ def show_dashboard():
         key="date_range_filter" # Add a key to manage state
     )
     
-    df_selection = df.query(
-        "`Asset Class` == @asset_class & `Close Date` >= @start_date & `Close Date` <= @end_date"
+    df_selection = df.query( # Compare only the date part of 'Close Date'
+        "`Asset Class` == @asset_class & `Close Date`.dt.date >= @start_date & `Close Date`.dt.date <= @end_date"
     )
 
     # Check if the dataframe is empty
