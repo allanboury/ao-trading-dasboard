@@ -26,7 +26,9 @@ def format_close_date(date_str):
 
 def parse_html_to_dataframe(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
-    records = soup.find_all('div', class_=re.compile(r'border-grey-300.*flex.*items-center'))
+    # This regex is now more specific to only match the trade rows and exclude the header.
+    # It looks for the class that contains 'border-b' and 'last-of-type:border-none'.
+    records = soup.find_all('div', class_=re.compile(r'border-grey-300.*border-b.*last-of-type:border-none'))
 
     if not records:
         return pd.DataFrame()
