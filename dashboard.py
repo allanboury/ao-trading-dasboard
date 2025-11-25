@@ -181,7 +181,7 @@ def show_dashboard():
             title_text="Cumulative & Daily Profit Trend", xaxis_title="Date",
             yaxis=dict(title="Cumulative Profit ($)", color="blue"),
             yaxis2=dict(title="Daily Profit/Loss ($)", overlaying="y", side="right"),
-                legend=dict(title="Metric", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(title="Metric", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         st.plotly_chart(fig)
 
@@ -226,13 +226,28 @@ def show_dashboard():
 
 # --- Password Protection ---
 def check_password():
+    """Returns `True` if the user is authenticated."""
+
+    # If user is already authenticated, show dashboard immediately.
+    if st.session_state.get("password_correct", False):
+        return True
+
+    # Show login form.
     st.title("📊 Trading Dashboard")
     password = st.text_input("Enter Password", type="password")
+
     if password == st.secrets["PASSWORD"]:
+        # If password is correct, set session state and rerun.
+        st.session_state["password_correct"] = True
+        st.rerun()
+    elif password:
+        # If a password was entered but it's wrong, show an error.
+        st.error("The password you entered is incorrect.")
         return True
-    elif password: # If a password was entered but it's wrong
-        st.error("Incorrect password")
     return False
 
 if check_password():
+    # Once authenticated, the main app title is set inside show_dashboard
+    # or we can set it here if we move the title out of the login form.
+    st.title("📊 Trading Dashboard")
     show_dashboard()
