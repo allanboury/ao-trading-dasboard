@@ -151,7 +151,7 @@ def show_dashboard():
         gross_profit = winning_trades["Profit/Loss Amount"].sum()
         gross_loss = abs(losing_trades["Profit/Loss Amount"].sum())
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else float('inf')
-        prifit_by_day = total_profit / num_days_in_range if num_days_in_range > 0 else 0
+        profit_by_day = total_profit / num_days_in_range if num_days_in_range > 0 else 0
 
 
 
@@ -166,6 +166,7 @@ def show_dashboard():
         col3.metric("Profit Factor", f"{profit_factor:.2f}")
         row2_col1.metric("Total Trades", num_trades)
         row2_col2.metric("Days in Range", f"{num_days_in_range} days")
+        row2_col3.metric("Profit by Day", f"${profit_by_day:,.2f}")
 
         st.markdown("---")
 
