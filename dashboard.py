@@ -140,6 +140,7 @@ def show_dashboard():
         num_trades = len(df_selection)
         oldest_date = df_selection["Close Date"].min().strftime("%Y-%m-%d")
         newest_date = df_selection["Close Date"].max().strftime("%Y-%m-%d")
+        num_days_in_range = (end_date - start_date).days + 1
 
         # Advanced Metrics
         winning_trades = df_selection[df_selection["Profit/Loss Amount"] > 0]
@@ -150,15 +151,19 @@ def show_dashboard():
         gross_profit = winning_trades["Profit/Loss Amount"].sum()
         gross_loss = abs(losing_trades["Profit/Loss Amount"].sum())
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else float('inf')
+        prifit_by_day = total_profit / num_days_in_range if num_days_in_range > 0 else 0
+
+
 
         # Display metrics
         st.metric("Date range", f"{oldest_date} to {newest_date}")
         
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         col1.metric("Total Profit/Loss", f"${total_profit:,.2f}")
         col2.metric("Win Rate", f"{win_rate:.2f}%")
         col3.metric("Profit Factor", f"{profit_factor:.2f}")
         col4.metric("Total Trades", num_trades)
+        col5.metric("Days in Range", f"{num_days_in_range} days")
 
         st.markdown("---")
 
