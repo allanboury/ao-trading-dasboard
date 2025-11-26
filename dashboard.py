@@ -159,7 +159,7 @@ def show_dashboard():
         st.metric("Date range", f"{oldest_date} to {newest_date}")
         
         col1, col2, col3 = st.columns(3)
-        row2_col1, row2_col2 = st.columns(2)
+        row2_col1, row2_col2, row2_col3 = st.columns(3)
         
         col1.metric("Total Profit/Loss", f"${total_profit:,.2f}")
         col2.metric("Win Rate", f"{win_rate:.2f}%")
