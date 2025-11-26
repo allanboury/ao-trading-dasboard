@@ -173,22 +173,22 @@ def show_dashboard():
         with tab1:
             st.subheader("Performance Over Time")
             # --- Profit Trend Over Time ---
-        daily_profit = df_selection.groupby(df_selection["Close Date"].dt.date)["Profit/Loss Amount"].sum()
-        cumulative_profit = daily_profit.cumsum()
+            daily_profit = df_selection.groupby(df_selection["Close Date"].dt.date)["Profit/Loss Amount"].sum()
+            cumulative_profit = daily_profit.cumsum()
 
-        fig = go.Figure()
-        fig.add_trace(go.Bar(
-            x=daily_profit.index, y=daily_profit.values, name='Daily Profit/Loss',
-            yaxis='y2', marker_color=['green' if p >= 0 else 'red' for p in daily_profit.values]
-        ))
-        fig.add_trace(go.Scatter(x=cumulative_profit.index, y=cumulative_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
-        fig.update_layout(
-            title_text="Cumulative & Daily Profit Trend", xaxis_title="Date",
-            yaxis=dict(title="Cumulative Profit ($)", color="blue"),
-            yaxis2=dict(title="Daily Profit/Loss ($)", overlaying="y", side="right"),
-            legend=dict(title="Metric", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig)
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=daily_profit.index, y=daily_profit.values, name='Daily Profit/Loss',
+                yaxis='y2', marker_color=['green' if p >= 0 else 'red' for p in daily_profit.values]
+            ))
+            fig.add_trace(go.Scatter(x=cumulative_profit.index, y=cumulative_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
+            fig.update_layout(
+                title_text="Cumulative & Daily Profit Trend", xaxis_title="Date",
+                yaxis=dict(title="Cumulative Profit ($)", color="blue"),
+                yaxis2=dict(title="Daily Profit/Loss ($)", overlaying="y", side="right"),
+                legend=dict(title="Metric", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig)
 
         with tab2:
             st.subheader("Performance by Asset Class")
