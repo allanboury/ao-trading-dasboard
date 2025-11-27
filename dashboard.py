@@ -143,8 +143,8 @@ def show_dashboard():
     )
 
     # --- Dynamic Currency Selector from Hardcoded Data ---
-    # Create a list of currency codes for the selectbox, sorted alphabetically.
-    currency_options = sorted(list(CURRENCY_DATA.keys()))
+    # Create a list of currency codes, sorted by the new 'order_number' parameter.
+    currency_options = sorted(CURRENCY_DATA.keys(), key=lambda code: CURRENCY_DATA[code]['order_number'])
     # Create a dictionary to map currency codes to their native symbols.
     currency_symbols = {code: details.get('symbol_native', '$') for code, details in CURRENCY_DATA.items()}
     
@@ -279,13 +279,27 @@ def show_dashboard():
         # --- Tab 3: Trade Details and Data Export ---
         with tab3:
             st.subheader("Trade Inspection")
+
+            # --- Prepare DataFrame for Display ---
+            # Create a copy to avoid modifying the original df_selection
+            display_df = df_selection.copy()
+            # Rename the converted P/L column for clearer display in the table
+            display_df.rename(columns={"Converted P/L": f"Profit/Loss ({selected_currency})"}, inplace=True)
+            # Define and reorder columns for a clean presentation
+            display_columns = [
+                "Asset Name", "Asset Ticker", f"Profit/Loss ({selected_currency})", 
+                "Percent", "Close Date", "Asset Class", "Type"
+            ]
+            # Ensure all selected columns exist in the DataFrame to prevent errors
+            final_display_columns = [col for col in display_columns if col in display_df.columns]
+
             # A slider allows the user to dynamically select how many trades to view.
             num_display_trades = st.slider("Number of trades to display:", 5, 50, 10)
             st.write(f"**🔥 Top {num_display_trades} Trades**")
-            st.dataframe(df_selection.sort_values("Converted P/L", ascending=False).head(num_display_trades))
+            st.dataframe(display_df.sort_values(f"Profit/Loss ({selected_currency})", ascending=False).head(num_display_trades)[final_display_columns])
             
             st.write(f"**🧊 Bottom {num_display_trades} Trades**")
-            st.dataframe(df_selection.sort_values("Converted P/L", ascending=True).head(num_display_trades))
+            st.dataframe(display_df.sort_values(f"Profit/Loss ({selected_currency})", ascending=True).head(num_display_trades)[final_display_columns])
 
             # An expander provides access to the full raw data and an export button.
             with st.expander("View Full Parsed Data Table & Export"):
