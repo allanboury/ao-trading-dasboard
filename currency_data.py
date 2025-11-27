@@ -10,7 +10,7 @@ CURRENCY_DATA = {
     "CHF": {"symbol": "CHF", "name": "Swiss Franc", "symbol_native": "CHF", "order_number": 7},
     "CNY": {"symbol": "CN¥", "name": "Chinese Yuan", "symbol_native": "CN¥", "order_number": 8},
     "CZK": {"symbol": "Kč", "name": "Czech Republic Koruna", "symbol_native": "Kč", "order_number": 9},
-    "DKK": {"symbol": "Dkr", "name": "Danish Krone", "symbol_native": "kr", "order_number": 10},
+    "DKK": {"symbol": "Dkr", "name": "Danish Krone", "symbol_native": "kr", "order_number": 10},    
     "EUR": {"symbol": "€", "name": "Euro", "symbol_native": "€", "order_number": 11},
     "GBP": {"symbol": "£", "name": "British Pound Sterling", "symbol_native": "£", "order_number": 12},
     "HKD": {"symbol": "HK$", "name": "Hong Kong Dollar", "symbol_native": "$", "order_number": 13},
