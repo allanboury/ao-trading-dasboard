@@ -151,19 +151,21 @@ def show_dashboard():
     # Function to format the display in the selectbox (e.g., "USD - US Dollar").
     def format_currency(code):
         return f"{code} - {CURRENCY_DATA[code]['name']}"
+
+    # Find the index of 'USD' to set it as the default in the selectbox.
+    try:
+        default_ix = currency_options.index("USD")
+    except ValueError:
+        default_ix = 0 # Fallback to the first currency if USD is not in the list
     
     selected_currency = st.sidebar.selectbox(
         "Select Currency:",
         options=currency_options,
+        index=default_ix, # Set default to USD
         key="currency_filter",
         format_func=format_currency
     )
     
-    # Fetch live exchange rates and get the rate and symbol for the selected currency.
-    rates = get_exchange_rates(st.secrets["CURRENCY_API_KEY"])
-    conversion_rate = rates.get(selected_currency, 1) if rates else 1
-    currency_symbol = currency_symbols.get(selected_currency, "$")
-
     # --- Date Range Selector Widget ---
     start_date, end_date = st.sidebar.date_input(
         "Select Date Range:",
@@ -183,8 +185,17 @@ def show_dashboard():
         st.warning("No data available for the selected filters. Please adjust your selection.")
         st.stop() # This will halt the app from running further
     
-    # --- Apply Currency Conversion ---
-    df_selection["Converted P/L"] = df_selection["Profit/Loss Amount"] * conversion_rate # Create a new column with converted values.
+    # --- Handle Currency Conversion ---
+    # This is done *after* filtering to ensure we only convert the data being displayed.
+    currency_symbol = currency_symbols.get(selected_currency, "$")
+    if selected_currency == "USD":
+        # If the selected currency is the default (USD), no conversion is needed.
+        df_selection["Converted P/L"] = df_selection["Profit/Loss Amount"]
+    else:
+        # For other currencies, fetch live exchange rates and apply conversion.
+        rates = get_exchange_rates(st.secrets["CURRENCY_API_KEY"])
+        conversion_rate = rates.get(selected_currency, 1) if rates else 1
+        df_selection["Converted P/L"] = df_selection["Profit/Loss Amount"] * conversion_rate
 
     try:
         # --- Summary Metrics ---
