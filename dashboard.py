@@ -195,7 +195,7 @@ def show_dashboard():
         # For other currencies, fetch live exchange rates and apply conversion.
         rates = get_exchange_rates(st.secrets["CURRENCY_API_KEY"])
         conversion_rate = rates.get(selected_currency, 1) if rates else 1
-        df_selection["Converted P/L"] = df_selection["Profit/Loss Amount"] * conversion_rate
+        df_selection["Converted P/L"] = (df_selection["Profit/Loss Amount"] * conversion_rate).round(2)
 
     try:
         # --- Summary Metrics ---
