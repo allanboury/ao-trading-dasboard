@@ -207,6 +207,8 @@ def show_dashboard():
         newest_date = df_selection["Close Date"].max().strftime("%Y-%m-%d")
         num_days_in_range = (end_date - start_date).days + 1
 
+        # Calculate months in range as a float
+        num_months_in_range = num_days_in_range / (365.25 / 12)
         # Advanced Metrics
         winning_trades = df_selection[df_selection["Profit/Loss Amount"] > 0] # Win/loss is based on original USD profit.
         losing_trades = df_selection[df_selection["Profit/Loss Amount"] <= 0] # Win/Loss is based on original data
@@ -224,14 +226,16 @@ def show_dashboard():
         st.metric("Date range", f"{oldest_date} to {newest_date}")
         
         col1, col2, col3 = st.columns(3)
-        row2_col1, row2_col2, row2_col3 = st.columns(3)
+        row2_col1, row2_col2, row2_col3 = st.columns(3)        
+        row3_col1, _, _ = st.columns(3)
         
         col1.metric("Total Profit/Loss", f"{currency_symbol}{total_profit:,.2f}")
         col2.metric("Win Rate", f"{win_rate:.2f}%")
         col3.metric("Profit Factor", f"{profit_factor:.2f}")
         row2_col1.metric("Total Trades", num_trades)
         row2_col2.metric("Days in Range", f"{num_days_in_range} days")
-        row2_col3.metric("Profit by Day", f"{currency_symbol}{profit_by_day:,.2f}")
+        row2_col3.metric("Profit by Day", f"{currency_symbol}{profit_by_day:,.2f}")        
+        row3_col1.metric("Months in Range", f"{num_months_in_range:.1f} months")
 
         st.markdown("---")
 
