@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import re
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup # type: ignore
 from datetime import datetime, date
 import freecurrencyapi
 from currency_data import CURRENCY_DATA # Import the currency data
@@ -92,6 +92,31 @@ def get_exchange_rates(api_key):
         st.sidebar.error(f"Could not fetch rates: {e}")
         return None
 
+# --- PRECISE MONTH CALCULATION LOGIC ---
+from dateutil.relativedelta import relativedelta
+
+def calculate_precise_months(start_date: date, end_date: date) -> float:
+    """
+    Calculates the number of months between two dates, including a fractional part
+    based on the actual number of days in the last partial month.
+    """
+    if start_date > end_date:
+        return 0.0
+
+    delta = relativedelta(end_date, start_date)
+
+    total_full_months = delta.years * 12 + delta.months
+    remaining_days = delta.days
+
+    if remaining_days == 0:
+        return float(total_full_months)
+
+    # Determine the month from which remaining_days are counted
+    intermediate_date = start_date + relativedelta(months=total_full_months)
+    # Calculate the number of days in that specific month
+    days_in_fractional_month = (intermediate_date.replace(day=1) + relativedelta(months=1) - intermediate_date.replace(day=1)).days
+
+    return total_full_months + (remaining_days / days_in_fractional_month) if days_in_fractional_month > 0 else float(total_full_months)
 
 def show_dashboard():
     # --- Data Input Sidebar ---
@@ -206,9 +231,9 @@ def show_dashboard():
         oldest_date = df_selection["Close Date"].min().strftime("%Y-%m-%d")
         newest_date = df_selection["Close Date"].max().strftime("%Y-%m-%d")
         num_days_in_range = (end_date - start_date).days + 1
-
-        # Calculate months in range as a float
-        num_months_in_range = num_days_in_range / (365.25 / 12)
+        
+        # Calculate months in range as a float using a more precise method
+        num_months_in_range = calculate_precise_months(start_date, end_date)
         # Advanced Metrics
         winning_trades = df_selection[df_selection["Profit/Loss Amount"] > 0] # Win/loss is based on original USD profit.
         losing_trades = df_selection[df_selection["Profit/Loss Amount"] <= 0] # Win/Loss is based on original data
