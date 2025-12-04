@@ -232,7 +232,9 @@ def show_dashboard():
         newest_date = df_selection["Close Date"].max().strftime("%Y-%m-%d")
         num_days_in_range = (end_date - start_date).days + 1
         
+        # =======================================================================================
         # Calculate months in range as a float using a more precise method
+        # =======================================================================================
         num_months_in_range = calculate_precise_months(start_date, end_date)
         # Advanced Metrics
         winning_trades = df_selection[df_selection["Profit/Loss Amount"] > 0] # Win/loss is based on original USD profit.
@@ -246,9 +248,9 @@ def show_dashboard():
         profit_by_day = total_profit / num_days_in_range if num_days_in_range > 0 else 0
         profit_by_month = total_profit / num_months_in_range if num_months_in_range > 0 else 0
 
-
-
+        # =======================================================================================
         # Display metrics in a two-row layout.
+        # =======================================================================================
         st.metric("Date range", f"{oldest_date} to {newest_date}")
         
         row1_col1, row1_col2, row1_col3 = st.columns(3)
@@ -259,8 +261,8 @@ def show_dashboard():
         row1_col2.metric("Profit by Day", f"{currency_symbol}{profit_by_day:,.2f}") 
         row1_col3.metric("Profit by Month", f"{currency_symbol}{profit_by_month:,.2f}")
         row2_col1.metric("Total Trades", num_trades)
-        row2_col2.metric("Months in Range", f"{num_months_in_range:.1f} months")
-        row2_col3.metric("Days in Range", f"{num_days_in_range} days")       
+        row2_col2.metric("Days in Range", f"{num_days_in_range} days")
+        row2_col3.metric("Months in Range", f"{num_months_in_range:.1f} months")       
         row3_col1.metric("Profit Factor", f"{profit_factor:.2f}")
         row3_col2.metric("Win Rate", f"{win_rate:.2f}%")
 
