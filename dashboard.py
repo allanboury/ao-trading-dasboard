@@ -244,6 +244,7 @@ def show_dashboard():
         gross_loss = abs(losing_trades["Converted P/L"].sum())
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else float('inf')
         profit_by_day = total_profit / num_days_in_range if num_days_in_range > 0 else 0
+        profit_by_month = total_profit / num_months_in_range if num_months_in_range > 0 else 0
 
 
 
@@ -252,15 +253,16 @@ def show_dashboard():
         
         row1_col1, row1_col2, row1_col3 = st.columns(3)
         row2_col1, row2_col2, row2_col3 = st.columns(3)        
-        row3_col1, _, _ = st.columns(3)
+        row3_col1, row3_col2, _ = st.columns(3)
         
         row1_col1.metric("Total Profit/Loss", f"{currency_symbol}{total_profit:,.2f}")
         row1_col2.metric("Profit by Day", f"{currency_symbol}{profit_by_day:,.2f}") 
-        row1_col3.metric("Total Trades", num_trades)
-        row2_col1.metric("Months in Range", f"{num_months_in_range:.1f} months")
-        row2_col2.metric("Days in Range", f"{num_days_in_range} days")
-        row2_col3.metric("Win Rate", f"{win_rate:.2f}%")       
+        row1_col3.metric("Profit by Month", f"{currency_symbol}{profit_by_month:,.2f}")
+        row2_col1.metric("Total Trades", num_trades)
+        row2_col2.metric("Months in Range", f"{num_months_in_range:.1f} months")
+        row2_col3.metric("Days in Range", f"{num_days_in_range} days")       
         row3_col1.metric("Profit Factor", f"{profit_factor:.2f}")
+        row3_col2.metric("Win Rate", f"{win_rate:.2f}%")
 
         st.markdown("---")
 
