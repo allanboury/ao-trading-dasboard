@@ -294,6 +294,32 @@ def show_dashboard():
             )
             st.plotly_chart(fig)
 
+            st.markdown("---")
+
+            # --- Monthly Performance Chart ---
+            st.subheader("Monthly Performance Trend")
+            # Group by month. Using to_period('M') is robust for this.
+            monthly_profit = df_selection.groupby(df_selection["Close Date"].dt.to_period('M'))["Converted P/L"].sum()
+            # The index will be PeriodIndex, convert to timestamp for plotting
+            monthly_profit.index = monthly_profit.index.to_timestamp()
+            
+            cumulative_monthly_profit = monthly_profit.cumsum()
+
+            # Create a combo chart for monthly performance
+            fig_monthly = go.Figure()
+            fig_monthly.add_trace(go.Bar(
+                x=monthly_profit.index, y=monthly_profit.values, name='Monthly Profit/Loss',
+                yaxis='y2', marker_color=['green' if p >= 0 else 'red' for p in monthly_profit.values]
+            ))
+            fig_monthly.add_trace(go.Scatter(x=cumulative_monthly_profit.index, y=cumulative_monthly_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
+            fig_monthly.update_layout(
+                title_text="Cumulative & Monthly Profit Trend", xaxis_title="Month",
+                yaxis=dict(title=f"Cumulative Profit ({currency_symbol})", color="blue"),
+                yaxis2=dict(title=f"Monthly Profit/Loss ({currency_symbol})", overlaying="y", side="right"),
+                legend=dict(title="Metric", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig_monthly)
+
         # --- Tab 2: Asset Breakdown Chart ---
         with tab2:
             st.subheader("Performance by Asset Class")
