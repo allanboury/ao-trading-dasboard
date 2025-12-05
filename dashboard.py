@@ -280,11 +280,11 @@ def show_dashboard():
 
             # Create a combo chart with bars for daily P/L and a line for cumulative P/L.
             fig = go.Figure()
+            fig.add_trace(go.Scatter(x=cumulative_profit.index, y=cumulative_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
             fig.add_trace(go.Bar(
                 x=daily_profit.index, y=daily_profit.values, name='Daily Profit/Loss',
                 yaxis='y2', marker_color=['green' if p >= 0 else 'red' for p in daily_profit.values]
             ))
-            fig.add_trace(go.Scatter(x=cumulative_profit.index, y=cumulative_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
             fig.update_layout(
                 # Use a secondary y-axis for daily profit to improve readability.
                 title_text="Cumulative & Daily Profit Trend", xaxis_title="Date",
@@ -307,13 +307,13 @@ def show_dashboard():
 
             # Create a combo chart for monthly performance
             fig_monthly = go.Figure()
+            fig_monthly.add_trace(go.Scatter(x=cumulative_monthly_profit.index, y=cumulative_monthly_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
             fig_monthly.add_trace(go.Bar(
                 x=monthly_profit.index, y=monthly_profit.values, name='Monthly Profit/Loss',
                 yaxis='y2', marker_color=['green' if p >= 0 else 'red' for p in monthly_profit.values]
             ))
-            fig_monthly.add_trace(go.Scatter(x=cumulative_monthly_profit.index, y=cumulative_monthly_profit.values, name='Cumulative Profit', mode='lines', line=dict(color='blue')))
             fig_monthly.update_layout(
-                title_text="Cumulative & Monthly Profit Trend", xaxis_title="Month",
+                title_text="Cumulative & Monthly Profit Trend", xaxis=dict(title="Month", tickformat="%b %Y"),
                 yaxis=dict(title=f"Cumulative Profit ({currency_symbol})", color="blue"),
                 yaxis2=dict(title=f"Monthly Profit/Loss ({currency_symbol})", overlaying="y", side="right"),
                 legend=dict(title="Metric", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
