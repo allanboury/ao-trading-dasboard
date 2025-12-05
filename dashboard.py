@@ -122,6 +122,7 @@ def show_dashboard():
     # --- Data Input Sidebar ---
     # This section handles the user input for the raw HTML data.
     st.sidebar.header("Data Input")
+    st.set_page_config(layout="wide")
     html_input = st.sidebar.text_area("Paste HTML content here", height=250)
 
     if st.sidebar.button("Process HTML"):
